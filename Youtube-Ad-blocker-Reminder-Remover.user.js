@@ -370,20 +370,15 @@
 
 
     function checkForUpdate(){
-
-
         if (window.top !== window.self && !(window.location.href.includes("youtube.com"))){
             return;
         }
-
 
         if (hasIgnoredUpdate){
             return;
         }
 
-
         const scriptUrl = 'https://raw.githubusercontent.com/TheRealJoelmatic/RemoveAdblockThing/main/Youtube-Ad-blocker-Reminder-Remover.user.js';
-
 
         fetch(scriptUrl)
         .then(response => response.text())
@@ -395,75 +390,49 @@
                 return;
             }
 
-
             const githubVersion = parseFloat(match[1]);
-            const currentVersion = parseFloat(GM_info.script.version);
-
+            const currentVersion = typeof GM_info !== "undefined" ? parseFloat(GM_info.script.version) : 6.0;
 
             if (githubVersion <= currentVersion) {
                 log('You have the latest version of the script. ' + githubVersion + " : " + currentVersion);
                 return;
             }
 
-
             console.log('Remove Adblock Thing: A new version is available. Please update your script. ' + githubVersion + " : " + currentVersion);
 
-
-            if(updateModal.enable){
+            if(updateModal.enable && typeof Swal !== "undefined"){
                 // if a version is skipped, don't show the update message again until the next version
                 if (parseFloat(localStorage.getItem('skipRemoveAdblockThingVersion')) === githubVersion) {
                     return;
                 }
-                // If enabled, include the SweetAlert2 library
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-                document.head.appendChild(script);
 
-
-                const style = document.createElement('style');
-                style.textContent = '.swal2-container { z-index: 2400; }';
-                document.head.appendChild(style);
-
-
-                // Wait for SweetAlert to be fully loaded
-                script.onload = function () {
-
-
-                    Swal.fire({
-                        position: "top-end",
-                        backdrop: false,
-                        title: 'Remove Adblock Thing: New version is available.',
-                        text: 'Do you want to update?',
-                        showCancelButton: true,
-                        showDenyButton: true,
-                        confirmButtonText: 'Update',
-                        denyButtonText:'Skip',
-                        cancelButtonText: 'Close',
-                        timer: updateModal.timer ?? 5000,
-                        timerProgressBar: true,
-                        didOpen: (modal) => {
-                            modal.onmouseenter = Swal.stopTimer;
-                            modal.onmouseleave = Swal.resumeTimer;
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.replace(scriptUrl);
-                        } else if(result.isDenied) {
-                            localStorage.setItem('skipRemoveAdblockThingVersion', githubVersion);
-                        }
-                    });
-                };
-
-
-                script.onerror = function () {
-                    var result = window.confirm("Remove Adblock Thing: A new version is available. Please update your script.");
-                    if (result) {
-                        window.location.replace(scriptUrl);
+                Swal.fire({
+                    position: "top-end",
+                    backdrop: false,
+                    title: 'Remove Adblock Thing: New version is available.',
+                    text: 'Do you want to update?',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: 'Update',
+                    denyButtonText:'Skip',
+                    cancelButtonText: 'Close',
+                    timer: updateModal.timer ?? 5000,
+                    timerProgressBar: true,
+                    didOpen: (modal) => {
+                        modal.onmouseenter = Swal.stopTimer;
+                        modal.onmouseleave = Swal.resumeTimer;
                     }
-                }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.replace(scriptUrl);
+                    } else if(result.isDenied) {
+                        localStorage.setItem('skipRemoveAdblockThingVersion', githubVersion);
+                    }
+                });
             } else {
+                // YouTube blocks setting script.src because of Trusted Types.
+                // Use the default browser popup instead of loading SweetAlert2 here.
                 var result = window.confirm("Remove Adblock Thing: A new version is available. Please update your script.");
-
 
                 if (result) {
                     window.location.replace(scriptUrl);
@@ -480,11 +449,8 @@
 
     // Used for debug messages
     function log(log, level, ...args) {
-
-
         if(!debugMessages)
             return;
-
 
         const prefix = '🔧 Remove Adblock Thing:';
         const message = `${prefix} ${log}`;
